@@ -1,4 +1,4 @@
-#!/Users/nakajimaryo/stock-app/venv/bin/python3
+#!/Users/nakajimaryo/MarketLog/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
