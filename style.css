@@ -1,38 +1,58 @@
 /* style.css */
 
+/* 1. アプリ全体の背景と基本文字色 */
 .stApp {
     background-color: #ffffff;
+    color: #333333;
 }
 
+/* 基本的なテキスト要素の文字色を指定（!importantは外して柔軟性を持たせる） */
+p, div, span, label, li, h1, h2, h3, h4, h5, h6 {
+    color: #333333;
+}
+
+/* 2. 見出しのデザイン（少し強調） */
 h1, h2, h3 {
-    color: #1E3A8A !important;
-    font-weight: bold !important;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1E3A8A; /* 濃い青 */
+    font-weight: bold;
 }
 
+/* 3. メトリクス（数値表示）のデザイン */
 [data-testid="stMetric"] {
-    background-color: #f9fafb;
+    background-color: #f9fafb; /* 薄いグレー背景 */
     padding: 15px;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
 }
 
 [data-testid="stMetricLabel"] {
-    color: #4B5563 !important;
+    color: #6B7280 !important; /* ラベルは少し淡いグレー */
 }
 
 [data-testid="stMetricValue"] {
-    color: #111827 !important;
+    color: #111827 !important; /* 数字は濃い黒 */
 }
 
-/* 【修正2】警告メッセージ (st.warning) の視認性を修正 */
-[data-testid="stAlert"] {
-    background-color: #FFF4CE !important; /* 薄い黄色背景 */
-    color: #000000 !important;             /* 文字色を黒に強制 */
-    border: 1px solid #FFD700;
+/* --- 【重要修正】検索ボックスとドロップダウン対策 --- */
+
+/* ドロップダウンリストのコンテナ（ポップオーバー） */
+div[data-baseweb="popover"] {
+    background-color: #ffffff !important; /* 背景を白に強制 */
+    border: 1px solid #e5e7eb;
 }
 
-/* 警告文の中の文字要素も黒にする */
-[data-testid="stAlert"] p, [data-testid="stAlert"] div {
-    color: #333333 !important;
+/* ドロップダウン内のリストアイテム（文字） */
+/* セレクタを強化して、非ホバー時も確実に黒文字にする */
+div[data-baseweb="popover"] div[role="option"],
+div[data-baseweb="popover"] span,
+div[data-baseweb="popover"] li {
+    color: #333333 !important; /* 文字を黒に強制 */
+    background-color: transparent; /* 背景はコンテナの白を透過させる */
+}
+
+/* ホバー時（マウスを乗せた時）と選択中のスタイル */
+div[data-baseweb="popover"] div[role="option"][aria-selected="true"],
+div[data-baseweb="popover"] div[role="option"]:hover {
+    background-color: #f3f4f6 !important; /* 薄いグレーのハイライト */
+    color: #000000 !important; /* 文字は真っ黒に */
 }
