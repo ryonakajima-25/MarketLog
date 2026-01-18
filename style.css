@@ -1,0 +1,38 @@
+/* style.css */
+
+.stApp {
+    background-color: #ffffff;
+}
+
+h1, h2, h3 {
+    color: #1E3A8A !important;
+    font-weight: bold !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+[data-testid="stMetric"] {
+    background-color: #f9fafb;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #4B5563 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #111827 !important;
+}
+
+/* 【修正2】警告メッセージ (st.warning) の視認性を修正 */
+[data-testid="stAlert"] {
+    background-color: #FFF4CE !important; /* 薄い黄色背景 */
+    color: #000000 !important;             /* 文字色を黒に強制 */
+    border: 1px solid #FFD700;
+}
+
+/* 警告文の中の文字要素も黒にする */
+[data-testid="stAlert"] p, [data-testid="stAlert"] div {
+    color: #333333 !important;
+}

@@ -1,71 +1,55 @@
+# app.py
 import streamlit as st
-import jquantsapi
-import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
+import data_manager  # 作成したファイルをインポート
+
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+# 設定
+st.set_page_config(page_title="market-log", layout="wide")
+local_css("style.css")
 
 st.title("📊 market-log")
+st.warning("⚠️ 現在はFreeプラン期間内（2025年10月）のデータを表示しています")
 
-@st.cache_resource
-def get_api_client():
-    api_key = st.secrets["JQUANTS_API_KEY"]
-    # V2のAPIキーをリフレッシュトークンとして渡す
-    cli = jquantsapi.Client(refresh_token=api_key)
-    return cli
+# 開発モードの切り替え
+is_dev_mode = st.sidebar.toggle("開発モード（モック使用）", value=False)
+API_KEY = st.secrets["JQUANTS_API_KEY"]
 
-cli = get_api_client()
+# app.py (データ取得部分)
+@st.cache_data(ttl=60) # デバッグ中はキャッシュ時間を短く（60秒）設定
+def get_data(code, is_dev):
+    if is_dev:
+        return data_manager.get_mock_data(code), None
+    else:
+        return data_manager.fetch_real_data(code, API_KEY)
 
-# データ取得関数
-@st.cache_data(ttl=3600)
-def fetch_stock_data(code):
-    try:
-        # 土日の取得エラーを防ぐため、直近1週間のデータを取得し、その一番新しいものを出す
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=7)
-        
-        # V2では4桁または5桁。念のため5桁(末尾0)も試せるように
-        # まずは4桁でリクエスト
-        df = cli.get_prices_daily_quotes(
-            code=code, 
-            from_str=start_date.strftime("%Y-%m-%d"),
-            to_str=end_date.strftime("%Y-%m-%d")
-        )
-        
-        if df.empty:
-            return None, "データが空です（市場休業日の可能性があります）"
-            
-        return df.iloc[-1], None
-    except Exception as e:
-        return None, str(e)
+# 表示
+# app.py の target_stocks 定義部分
 
-# 銘柄設定（V2仕様：4桁で試してダメなら5桁に自動変換するロジックをループ内で対応）
-target_stocks = {"3350": "メタプラネット", "8058": "三菱商事"}
-
+target_stocks = {
+    "3350": "メタプラネット",  # 4桁のままでOK（内部で "33500" になります）
+    "8058": "三菱商事"      # 4桁のままでOK（内部で "80580" になります）
+    }
 cols = st.columns(len(target_stocks))
 
+# app.py (表示部分の抜粋)
 for col, (code, name) in zip(cols, target_stocks.items()):
-    # 4桁で試す
-    data, err = fetch_stock_data(code)
-    
-    # 4桁でダメなら5桁（末尾に0）で再トライ
-    if data is None:
-        data, err = fetch_stock_data(code + "0")
-    
+    df, err = get_data(code, is_dev_mode)
     with col:
-        if data is not None:
-            # 取得成功時の表示
-            st.metric(f"{name} ({code})", f"¥{data['Close']:,}")
-            st.caption(f"日付: {data['Date']}")
+        st.markdown(f"### {name}")
+        if df is not None:
+            latest = df.iloc[-1]
+            # 取得したデータの日付を明示
+            st.caption(f"📅 データ日付: {latest['Date']}")
+            
+            # 前日比の計算（データが2日分以上あれば）
+            diff = 0
+            if len(df) >= 2:
+                diff = latest['Close'] - df.iloc[-2]['Close']
+            
+            st.metric(label="終値", value=f"¥{int(latest['Close']):,}", delta=f"¥{int(diff):,}")
         else:
-            # 失敗時の原因表示
-            st.error(f"{name}の取得失敗")
-            st.caption(f"原因: {err}")
-
-# デバッグ用：生データを確認したい場合
-if st.sidebar.checkbox("デバッグ情報を表示"):
-    st.sidebar.write("API接続テスト中...")
-    try:
-        # 試しに日経平均(99840)などのデータを1件だけ取ってみる
-        test_df = cli.get_prices_daily_quotes(code="80580")
-        st.write(test_df.tail(3))
-    except Exception as e:
-        st.write(f"APIテストエラー: {e}")
+            st.error(f"取得失敗: {err}")
